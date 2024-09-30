@@ -2,28 +2,46 @@
 import { computed } from 'vue';
 import { useModuleStore } from '@/stores/module.store';
 
+const props = defineProps<{
+  currentPath: string
+}>()
+
 const moduleStore = useModuleStore();
 const modulePick = computed(() => moduleStore.modulePick);
 
+const listBreadcrumb = computed(() => {
+  const currentPath = props.currentPath.replace("#", "");
+  if (currentPath === "/section") {
+    return [
+      { path: "/", label: modulePick.value.moduleName },
+      { path: null, label: "Section" }
+    ];
+  } else if (currentPath === "/sub-section") {
+    return [
+      { path: "/", label: modulePick.value.moduleName },
+      { path: "/section", label: modulePick.value.section },
+      { path: null, label: "Sub Section" }
+    ];
+  } else if (currentPath === "/question-group") {
+    return [
+      { path: "/", label: modulePick.value.moduleName },
+      { path: "/section", label: modulePick.value.section },
+      { path: "/sub-section", label: modulePick.value.subSection },
+      { path: null, label: "Question Group" }
+    ];
+  } else {
+    return []
+  }
+
+})
 </script>
 
 <template>
   <nav>
     <ol class="breadcrumb">
-      <li v-if="modulePick.moduleName" class="breadcrumb-item" :class="{active: modulePick.section}">
-        <a v-if="modulePick.section" href="#" @click="moduleStore.setModulePick('', 'moduleName')">{{ modulePick.moduleName }}</a>
-        <span v-else>{{ modulePick.moduleName }}</span>
-      </li>
-      <li v-if="modulePick.section" class="breadcrumb-item" :class="{active: modulePick.subSection}">
-        <a v-if="modulePick.subSection" href="#" @click="moduleStore.setModulePick('', 'section')">{{ modulePick.section }}</a>
-        <span v-else>{{ modulePick.section }}</span>
-      </li>
-      <li v-if="modulePick.subSection" class="breadcrumb-item" :class="{active: modulePick.subSection}">
-        <a v-if="modulePick.questionGroup" href="#"@click="moduleStore.setModulePick('', 'subSection')">{{ modulePick.subSection }}</a>
-        <span v-else>{{ modulePick.subSection }}</span>
-      </li>
-      <li v-if="modulePick.questionGroup" class="breadcrumb-item active">
-        <a href="#" @click="moduleStore.setModulePick('', 'questionGroup')">{{ modulePick.questionGroup }}</a>
+      <li v-for="list in listBreadcrumb" :key="list.label" class="breadcrumb-item">
+        <a v-if="list.path" :href="`#${list.path}`">{{ list.label }}</a>
+        <span v-else>{{ list.label }}</span>
       </li>
     </ol>
   </nav>

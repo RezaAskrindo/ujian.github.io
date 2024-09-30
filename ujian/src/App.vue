@@ -1,43 +1,72 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useModuleStore } from './stores/module.store';
 
 import HelloWorld from './components/HelloWorld.vue';
-import ModuleItem from './components/ModuleItem.vue';
 import NavItem from './components/NavItem.vue';
+
+import ListModule from './components/ListViews/ListModule.vue';
+import ListSection from './components/ListViews/ListSection.vue';
+import ListSubSection from './components/ListViews/ListSubSection.vue';
+import ListQuestionGroupSubSection from './components/ListViews/ListQuestionGroup.vue';
+
+import NotFound from './components/NotFound.vue';
 
 const moduleStore = useModuleStore();
 const modulePick = computed(() => moduleStore.modulePick);
-const moduleListData = computed(() => moduleStore.moduleListData);
+
+const routes: any = {
+  '/': ListModule,
+  '/section': ListSection,
+  '/sub-section': ListSubSection,
+  '/question-group': ListQuestionGroupSubSection,
+}
+
+const currentPath = ref(window.location.hash);
+
+window.addEventListener('hashchange', () => {
+  currentPath.value = window.location.hash
+})
+
+const currentView = computed(() => {
+  return routes[currentPath.value.slice(1) || '/'] || NotFound
+})
 
 onMounted(() =>{
   moduleStore.initModuleDataStore();
+  if (!modulePick.value.moduleName) {
+    window.location.hash = '';
+    currentPath.value = '/';
+  }
+
+  const w = window as any;
+  const google = w?.google;
+  if (google) {
+    google?.accounts?.oauth2.initTokenClient({
+      client_id: '312134406993-gohg72bsuqlinaghh7d2gsv234pdi2d8.apps.googleusercontent.com',
+      scope: 'https://www.googleapis.com/auth/spreadsheets.readonly',
+      callback: '',
+      hd: 'askrindo.co.id'
+    })
+  }
+  console.log(google)
+  const gapi = w?.gapi;
+  console.log(gapi)
 })
 </script>
 
 <template>
   <header>
-    <div class="wrapper">
+    <div v-if="currentPath === '#/' || currentPath === '/' || currentPath === ''" class="wrapper">
       <HelloWorld title="IELTS Test" sub-title="Prepare yourself" />
     </div>
-    <NavItem />
+    <NavItem v-else :current-path="currentPath" />
   </header>
 
-  <main v-if="modulePick.questionGroup">
-    <ModuleItem v-for="item in moduleListData.moduleNameList" :title="item" @on-click="moduleStore.setModulePick(item, 'moduleName')" />
+  <main>
+    <component :is="currentView" />
   </main>
-  <main v-else-if="modulePick.subSection">
-    <ModuleItem v-for="item in moduleListData.questionGroupList" :title="item" @on-click="moduleStore.setModulePick(item, 'questionGroup')" />
-  </main>
-  <main v-else-if="modulePick.section">
-    <ModuleItem v-for="item in moduleListData.subSectionList" :title="item" @on-click="moduleStore.setModulePick(item, 'subSection')" />
-  </main>
-  <main v-else-if="modulePick.moduleName">
-    <ModuleItem v-for="item in moduleListData.sectionList" :title="item" @on-click="moduleStore.setModulePick(item, 'section')" />
-  </main>
-  <main v-else>
-    <ModuleItem v-for="item in moduleListData.moduleNameList" :title="item" @on-click="moduleStore.setModulePick(item, 'moduleName')" />
-  </main>
+
 </template>
 
 <style scoped>
