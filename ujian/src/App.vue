@@ -1,47 +1,47 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+import { computed, onMounted } from 'vue';
+import { useModuleStore } from './stores/module.store';
+
+import HelloWorld from './components/HelloWorld.vue';
+import ModuleItem from './components/ModuleItem.vue';
+import NavItem from './components/NavItem.vue';
+
+const moduleStore = useModuleStore();
+const modulePick = computed(() => moduleStore.modulePick);
+const moduleListData = computed(() => moduleStore.moduleListData);
+
+onMounted(() =>{
+  moduleStore.initModuleDataStore();
+})
 </script>
 
 <template>
   <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
     <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+      <HelloWorld title="IELTS Test" sub-title="Prepare yourself" />
     </div>
+    <NavItem />
   </header>
 
-  <main>
-    <TheWelcome />
+  <main v-if="modulePick.questionGroup">
+    <ModuleItem v-for="item in moduleListData.moduleNameList" :title="item" @on-click="moduleStore.setModulePick(item, 'moduleName')" />
+  </main>
+  <main v-else-if="modulePick.subSection">
+    <ModuleItem v-for="item in moduleListData.questionGroupList" :title="item" @on-click="moduleStore.setModulePick(item, 'questionGroup')" />
+  </main>
+  <main v-else-if="modulePick.section">
+    <ModuleItem v-for="item in moduleListData.subSectionList" :title="item" @on-click="moduleStore.setModulePick(item, 'subSection')" />
+  </main>
+  <main v-else-if="modulePick.moduleName">
+    <ModuleItem v-for="item in moduleListData.sectionList" :title="item" @on-click="moduleStore.setModulePick(item, 'section')" />
+  </main>
+  <main v-else>
+    <ModuleItem v-for="item in moduleListData.moduleNameList" :title="item" @on-click="moduleStore.setModulePick(item, 'moduleName')" />
   </main>
 </template>
 
 <style scoped>
 header {
   line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
 }
 </style>
